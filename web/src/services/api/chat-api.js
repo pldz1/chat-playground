@@ -1,6 +1,8 @@
 import store from "@/store";
+import { mergeChatSettingsWithModel } from "@/constants";
 import { apiRequest } from "./axios-request.js";
 import { dsAlert, isValidChatInfoArray, getUuid, generateRandomCname } from "@/utils";
+import { tr } from "@/i18n";
 
 /**
  * 对话列表元素类型
@@ -74,7 +76,7 @@ export async function getChatList() {
   const res = await getChatListAPI(username);
   if (!res.flag) {
     await store.dispatch("resetChatList", []);
-    dsAlert({ type: "error", message: `Get chat list failed: ${res.log}` });
+    dsAlert({ type: "error", message: tr("toast.chatListFetchFailed", { error: res.log }) });
     return false;
   } else {
     const isValidData = isValidChatInfoArray(res.data);
@@ -83,7 +85,7 @@ export async function getChatList() {
       return true;
     } else {
       await store.dispatch("resetChatList", []);
-      dsAlert({ type: "error", message: `chat list is valid!` });
+      dsAlert({ type: "error", message: tr("toast.chatListInvalid") });
       return false;
     }
   }
@@ -102,10 +104,10 @@ export async function getChatSettings() {
 
   const res = await getChatSettingsAPI(username, cid);
   if (!res.flag) {
-    dsAlert({ type: "error", message: `Get current chat settings failed: ${res.log}` });
+    dsAlert({ type: "error", message: tr("toast.chatSettingsFetchFailed", { error: res.log }) });
     return false;
   } else {
-    const validData = JSON.parse(res.data);
+    const validData = res.data ? mergeChatSettingsWithModel(store.state.curChatModel, JSON.parse(res.data)) : mergeChatSettingsWithModel(store.state.curChatModel, {});
     await store.dispatch("setCurChatModelSettings", validData);
     return true;
   }
@@ -127,7 +129,7 @@ export async function setChatSettings() {
 
   const res = await setChatSettingsAPI(username, cid, data);
   if (!res.flag) {
-    dsAlert({ type: "error", message: `Set current chat settings failed: ${res.log}` });
+    dsAlert({ type: "error", message: tr("toast.chatSettingsSaveFailed", { error: res.log }) });
     return false;
   }
 
@@ -167,7 +169,7 @@ export async function addChat(name = null) {
   try {
     const res = await addChatAPI(username, chatId, chatName);
     if (!res.flag) {
-      dsAlert({ type: "error", message: `添加对话失败（${chatName}）: ${res.log}` });
+      dsAlert({ type: "error", message: tr("toast.chatAddFailed", { name: chatName, error: res.log }) });
       await updateLocalChatState();
       return false;
     }
@@ -177,7 +179,7 @@ export async function addChat(name = null) {
     await setChatSettings();
     return true;
   } catch (error) {
-    dsAlert({ type: "error", message: `添加对话异常: ${error.message || error}` });
+    dsAlert({ type: "error", message: tr("toast.chatAddException", { error: error.message || error }) });
     await updateLocalChatState();
     return false;
   }
@@ -216,7 +218,7 @@ export async function deleteChat(cid) {
   // 调用 API 删除服务器上的对话记录
   const res = await deleteChatAPI(username, cid);
   if (!res.flag) {
-    dsAlert({ type: "error", message: `Delete chat failed: ${res.log}` });
+    dsAlert({ type: "error", message: tr("toast.chatDeleteFailed", { error: res.log }) });
     return false;
   }
 
@@ -239,7 +241,7 @@ export async function renameChat(cid, cname) {
 
   const res = await renameChatAPI(username, cid, cname);
   if (!res.flag) {
-    dsAlert({ type: "error", message: `Rename chat failed: ${res.log}` });
+    dsAlert({ type: "error", message: tr("toast.chatRenameFailed", { error: res.log }) });
     return false;
   }
 
@@ -258,7 +260,7 @@ export async function getAllMessage(callback) {
 
   const res = await getAllMessageAPI(username, cid);
   if (!res.flag) {
-    dsAlert({ type: "error", message: `Get all messages list failed: ${res.log}` });
+    dsAlert({ type: "error", message: tr("toast.chatMessagesFetchFailed", { error: res.log }) });
     return [];
   } else {
     for (let index = 0; index < res.data.length; index++) {
@@ -288,7 +290,7 @@ export async function addMessage(mid, message) {
   const msgStr = JSON.stringify(message);
   const res = await addMessageAPI(username, cid, mid, msgStr);
   if (!res.flag) {
-    dsAlert({ type: "error", message: `Add message failed: ${res.log}` });
+    dsAlert({ type: "error", message: tr("toast.chatMessageAddFailed", { error: res.log }) });
     return false;
   }
   return true;
@@ -306,7 +308,7 @@ export async function deleteMessage(mid) {
 
   const res = await deleteMessageAPI(username, cid, mid);
   if (!res.flag) {
-    dsAlert({ type: "error", message: `Delete message failed: ${res.log}` });
+    dsAlert({ type: "error", message: tr("toast.chatMessageDeleteFailed", { error: res.log }) });
     return false;
   }
   return true;

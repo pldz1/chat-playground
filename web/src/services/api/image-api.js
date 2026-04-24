@@ -1,6 +1,7 @@
 import store from "@/store";
 import { apiRequest } from "./axios-request.js";
 import { dsAlert, getUuid } from "@/utils";
+import { tr } from "@/i18n";
 
 /**
  * 获取全部的图像列表
@@ -41,7 +42,7 @@ export async function getImageList() {
   const res = await getImageListAPI(username);
   if (!res.flag) {
     await store.dispatch("resetImageList", []);
-    dsAlert({ type: "error", message: `Get image list failed: ${res.log}` });
+    dsAlert({ type: "error", message: tr("toast.imageListFetchFailed", { error: res.log }) });
     return false;
   } else {
     if (Array.isArray(res.data)) {
@@ -51,7 +52,7 @@ export async function getImageList() {
       await store.dispatch("resetImageList", []);
       dsAlert({
         type: "error",
-        message: `Get image list failed: response data is not a array!`,
+        message: tr("toast.imageListInvalid"),
       });
     }
   }
@@ -75,10 +76,16 @@ export async function pushImage(prompt, url) {
   if (!res.flag) {
     dsAlert({
       type: "error",
-      message: `Push new image to server failed: ${res.log}`,
+      message: tr("toast.imagePushFailed", { error: res.log }),
     });
     return false;
   } else {
+    if (res.data?.src) {
+      const nextImageList = store.state.imageList.map((item) => {
+        return item.id === id ? { ...item, src: res.data.src } : item;
+      });
+      await store.dispatch("resetImageList", nextImageList);
+    }
     return true;
   }
 }
@@ -99,7 +106,7 @@ export async function deleteImage(id) {
   if (!res.flag) {
     dsAlert({
       type: "error",
-      message: `Delete the image in the server failed: ${res.log}`,
+      message: tr("toast.imageDeleteFailed", { error: res.log }),
     });
     return false;
   }

@@ -19,6 +19,7 @@
 <script setup>
 import { watch, computed } from "vue";
 import { useStore } from "vuex";
+import { useI18n } from "vue-i18n";
 import { dsAlert } from "@/utils";
 import { getChatList, getChatInsTemplateList } from "@/services";
 
@@ -28,6 +29,7 @@ import HeaderBar from "@/components/HeaderBar.vue";
 import ImageModal from "@/components/ImageModal.vue";
 
 const store = useStore();
+const { t } = useI18n();
 const isLoggedIn = computed(() => store.state.isLoggedIn);
 const curChatModel = computed(() => store.state.curChatModel);
 const models = computed(() => store.state.models);
@@ -47,7 +49,7 @@ watch(
 
     // 初始化获得一些用户对于对话模型的参数
     if (!isLoggedIn.value) {
-      dsAlert({ type: "warn", message: "未登录, 登录获得更好体验🤣." });
+      dsAlert({ type: "warn", message: t("common.loginHint") });
       return;
     }
 
@@ -63,23 +65,27 @@ watch(
 
 <style lang="scss" scoped>
 .chat-homepage-container {
-  position: relative;
-  left: 0px;
-  top: 0px;
   height: 100%;
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  background:
+    radial-gradient(circle at top left, oklch(var(--p) / 0.08), transparent 26%),
+    radial-gradient(circle at bottom right, oklch(var(--a) / 0.07), transparent 28%),
+    linear-gradient(180deg, oklch(var(--b1) / 0.98), oklch(var(--b2) / 0.96));
 
   .chpc-header {
-    position: relative;
-    height: 48px;
+    height: 64px;
+    flex: 0 0 auto;
   }
 
   .chpc-content {
-    position: relative;
-    width: 100%;
-    height: calc(100% - 48px);
+    flex: 1 1 auto;
+    min-height: 0;
     display: flex;
     flex-direction: row;
+    gap: 14px;
+    padding: 14px;
   }
 }
 </style>

@@ -77,11 +77,19 @@ export class DeepSeekClient {
    * });
    */
   async chat(data, params = {}, callback = null) {
-    // deepseek 的对话协议还是v1版本的 需要额外处理
-    const messages = data.map((item) => ({
-      role: item.role,
-      content: item.content[0].text,
-    }));
+    const messages = data.map((item) => {
+      if (typeof item.content === "string") {
+        return {
+          role: item.role,
+          content: item.content,
+        };
+      }
+
+      return {
+        role: item.role,
+        content: item.content?.[0]?.text || "",
+      };
+    });
     for await (const response of this.chatStream(messages, {
       ...params,
       stream: true,

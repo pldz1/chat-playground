@@ -15,7 +15,7 @@ export const ImageState = {
   deleteImage(id) {
     const index = this.imageList.findIndex((t) => t.id == id);
     if (index >= 0) {
-      this.imageList.slice(index, 1);
+      this.imageList.splice(index, 1);
     }
   },
 };

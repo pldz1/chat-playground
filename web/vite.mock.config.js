@@ -13,15 +13,9 @@ export default defineConfig({
   server: {
     host: "127.0.0.1",
     port: 20090,
-    proxy: {
-      "/api": {
-        target: "http://127.0.0.1:20088",
-        changeOrigin: true,
-      },
-    },
   },
   build: {
-    outDir: "../server/statics",
     emptyOutDir: true,
+    sourcemap: false,
   },
 });

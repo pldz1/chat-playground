@@ -1,4 +1,4 @@
-import { defChatModelSettings } from "@/constants";
+import { buildDefaultChatSettings, mergeChatSettingsWithModel } from "@/constants";
 
 /**
  * 表示聊天信息存储的对象。
@@ -12,7 +12,7 @@ export const ChatState = {
   /**
    * 配置聊天模型的设置参数。
    */
-  curChatModelSettings: structuredClone(defChatModelSettings),
+  curChatModelSettings: buildDefaultChatSettings(null),
 
   /**
    * 全部的对话信息
@@ -33,7 +33,7 @@ export const ChatState = {
    */
 
   setCurChatModelSettings(data) {
-    Object.assign(this.curChatModelSettings, data);
+    this.curChatModelSettings = mergeChatSettingsWithModel(this.curChatModel, data);
   },
 
   /**

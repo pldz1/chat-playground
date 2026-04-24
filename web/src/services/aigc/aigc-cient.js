@@ -1,6 +1,7 @@
 import store from "@/store";
 import { dsAlert } from "@/utils";
-import { chatModelTypeList } from "@/constants";
+import { buildChatCompletionParams, getChatModelInfo } from "@/constants";
+import { tr } from "@/i18n";
 
 import { OpenAIClient } from "./openai.js";
 import { AzureOpenAIClient } from "./azure-openai.js";
@@ -21,10 +22,11 @@ export class AIGCClient {
   init(model = null) {
     const actModel = this.type == "chat" ? store.state.curChatModel : model;
     if (!actModel) return;
+    const resolvedModelId = this.resolveModelId(actModel);
 
     // OpenAI
     if (actModel.apiType == "OpenAI") {
-      this.client = new OpenAIClient(actModel.baseURL, actModel.apiKey, actModel.model);
+      this.client = new OpenAIClient(actModel.baseURL, actModel.apiKey, resolvedModelId);
     }
 
     // Azure OpenAI
@@ -34,8 +36,12 @@ export class AIGCClient {
 
     // DeepSeek
     else if (actModel.apiType == "DeepSeek") {
-      this.client = new DeepSeekClient(actModel.baseURL, actModel.apiKey, actModel.model);
+      this.client = new DeepSeekClient(actModel.baseURL, actModel.apiKey, resolvedModelId);
     }
+  }
+
+  resolveModelId(model) {
+    return (model?.model || model?.modelType || "").trim();
   }
 
   async chat(data, callback = (response) => console.log(response)) {
@@ -43,25 +49,25 @@ export class AIGCClient {
     if (!this.client || !model.name || !model.apiKey) {
       dsAlert({
         type: "warn",
-        message: "对话模型初始化失败, 请重新选择模式再尝试.",
+        message: tr("toast.modelInitRetry"),
       });
       callback({
-        content: "模型初始化失败, 检查模型选项!",
+        content: tr("toast.modelInitCheck"),
         reasoning_content: "",
       });
       return false;
     }
 
-    const modelInfo = chatModelTypeList.find((item) => item.value == model.modelType);
+    const modelInfo = getChatModelInfo(model.modelType, model.apiType);
     // 对于思考模型, 不要上下文并且要保证拿到的消息的格式
     if (modelInfo.isReasonModel) {
       try {
-        await this.client.chat(data, {}, callback);
+        await this.client.chat(data, this.getChatParams(model), callback);
         return true;
       } catch (err) {
-        dsAlert({ type: "warn", message: `模型请求失败: ${String(err)}` });
+        dsAlert({ type: "warn", message: tr("toast.modelRequestFailed", { error: String(err) }) });
         callback({
-          content: `模型请求失败: ${String(err)}`,
+          content: tr("toast.modelRequestFailed", { error: String(err) }),
           reasoning_content: "",
         });
         return false;
@@ -74,9 +80,9 @@ export class AIGCClient {
         await this.client.chat(messages, params, callback);
         return true;
       } catch (err) {
-        dsAlert({ type: "warn", message: `模型请求失败: ${String(err)}` });
+        dsAlert({ type: "warn", message: tr("toast.modelRequestFailed", { error: String(err) }) });
         callback({
-          content: `模型请求失败: ${String(err)}`,
+          content: tr("toast.modelRequestFailed", { error: String(err) }),
           reasoning_content: "",
         });
         return false;
@@ -103,18 +109,7 @@ export class AIGCClient {
    * 从store里拿出基本的对话模型要的参数
    */
   getChatParams() {
-    const cms = store.state.curChatModelSettings;
-    const params = {
-      max_tokens: cms.max_tokens,
-      temperature: cms.temperature,
-      top_p: cms.top_p,
-      frequency_penalty: cms.frequency_penalty,
-      presence_penalty: cms.presence_penalty,
-      stop: cms.stop,
-      stream: true,
-      stream_options: { include_usage: true },
-    };
-    return params;
+    return buildChatCompletionParams(store.state.curChatModel, store.state.curChatModelSettings);
   }
 
   /**

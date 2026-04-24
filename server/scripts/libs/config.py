@@ -46,7 +46,7 @@ class ProjectConfig:
 
         # 用户配置项目的默认参数
         self.host: str = '127.0.0.1'                     # 项目运行的 Host address
-        self.port: int = 10088                           # 项目运行的 port 号
+        self.port: int = 20088                           # 项目运行的 port 号
         self.username = "admin"                          # 项目的超级管理员名字
         self.password = "admin"                          # 项目的超级管理员密码
         self.chat_models = {}                            # 项目提供的对话模型

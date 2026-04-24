@@ -1,32 +1,32 @@
 <template>
-  <div class="chat-sidebar-container" ref="chatSideContRef">
+  <div class="chat-sidebar-container" :class="{ expanded: isShowChatScrollbar }">
     <div class="csdb-sidebar">
       <!-- 显示 对话(chat) 的列表的头部 -->
       <div class="csdb-chat-list">
         <!-- 展开或者折叠 对话(chat) 列表 -->
-        <div class="tooltip tooltip-right" data-tip="展开(关闭)侧边栏">
+        <AppTooltip :text="t('chat.sidebarToggle')" placement="right">
           <button class="btn csdb-btn-wh1 csdb-btn-color1" @click="onShowSidebar">
             <div v-html="sildbar24"></div>
           </button>
-        </div>
+        </AppTooltip>
         <!-- 新建一个 对话(chat) -->
-        <div class="tooltip tooltip-right" data-tip="新建对话">
+        <AppTooltip :text="t('chat.newChat')" placement="right">
           <button class="btn csdb-btn-wh1 csdb-btn-color1" @click="onNewChat">
             <div v-html="new24"></div>
           </button>
-        </div>
+        </AppTooltip>
       </div>
-      <div class="tooltip tooltip-right" data-tip="设置模型参数">
+      <AppTooltip :text="t('chat.modelSettings')" placement="right">
         <button class="btn csdb-btn-wh1 csdb-btn-color1" @click="onShowModelSettings">
           <div v-html="setting24"></div>
         </button>
-      </div>
+      </AppTooltip>
     </div>
     <!-- 具体下滑内容 -->
-    <div v-show="isShowChatScrollbar" class="csdb-chats">
+    <div class="csdb-chats" :class="{ expanded: isShowChatScrollbar }">
       <div v-if="chatList.length == 0" class="csdb-chats-container">
         <h2 class="font-bold">
-          无对话列表
+          {{ t("chat.noChats") }}
           <br />
           <div v-html="wao128"></div>
         </h2>
@@ -49,31 +49,35 @@
             <span class="csdb-chat-label" @click="onSelectChat(item)">
               {{ item.cname }}
             </span>
-            <div class="tooltip tooltip-bottom" data-tip="其他操作">
-              <div class="csdb-chat-dropdown">
-                <button class="btn" @click="showChatOptions($event, item.cid)">
-                  <div v-html="options24"></div>
+            <AppDropdownMenu placement="bottom-end" :width="156" class="csdb-chat-actions-menu">
+              <template #trigger="{ toggle, open }">
+                <div class="csdb-chat-dropdown">
+                  <button
+                    class="btn"
+                    :class="{ open }"
+                    :aria-label="t('chat.moreActions')"
+                    @click.stop="toggle"
+                  >
+                    <div v-html="options24"></div>
+                  </button>
+                </div>
+              </template>
+              <template #default="{ close }">
+                <button class="csdb-chat-option" @click="onEditChatName(item.cid, close)">
+                  <div class="csdb-chat-option-copy">
+                    <span>{{ t("chat.renameChat") }}</span>
+                  </div>
                 </button>
-              </div>
-            </div>
+                <button class="csdb-chat-option csdb-chat-option-danger" @click="onDeleteChat(item.cid, close)">
+                  <div class="csdb-chat-option-copy">
+                    <span>{{ t("chat.deleteChat") }}</span>
+                  </div>
+                </button>
+              </template>
+            </AppDropdownMenu>
           </div>
         </div>
       </div>
-      <!-- 对话选项放在外侧,不被 chats 的尺寸限制住 -->
-      <ul v-show="isShowChatOptions" ref="dropdownRef" class="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow">
-        <li @click="onEditChatName">
-          <a
-            ><div v-html="edit24"></div>
-            编辑对话名称</a
-          >
-        </li>
-        <li @click="onDeleteChat">
-          <a
-            ><div v-html="delete24"></div>
-            删除对话</a
-          >
-        </li>
-      </ul>
     </div>
   </div>
   <ChatSettings></ChatSettings>
@@ -81,23 +85,23 @@
 
 <script setup>
 import { useStore } from "vuex";
-import { nextTick, ref, computed, onMounted, onUnmounted } from "vue";
-import { edit24, delete24, options24, sildbar24, new24, setting24, wao128 } from "@/assets/svg";
+import { nextTick, ref, computed } from "vue";
+import { useI18n } from "vue-i18n";
+import { options24, sildbar24, new24, setting24, wao128 } from "@/assets/svg";
 import { deleteChat, renameChat, getChatSettings } from "@/services";
-import { defChatModelSettings } from "@/constants";
+import { buildDefaultChatSettings } from "@/constants";
 import ChatSettings from "@/views/chat/ChatSettings.vue";
 import { dsAlert } from "@/utils";
+import AppTooltip from "@/components/AppTooltip.vue";
+import AppDropdownMenu from "@/components/AppDropdownMenu.vue";
 
 const store = useStore();
+const { t } = useI18n();
 const cid = computed(() => store.state.curChatId);
-const chatSideContRef = ref(null);
-
 const chatList = computed(() => {
   return [...store.state.chatList].reverse();
 });
 
-const dropdownRef = ref(null);
-const isShowChatOptions = ref(false);
 const isShowOptionCid = ref("");
 const isEditChatName = ref(false);
 const editChatName = ref("");
@@ -116,7 +120,7 @@ const onShowSidebar = () => {
  * 新建对话
  *  */
 const onNewChat = async () => {
-  store.dispatch("setCurChatModelSettings", structuredClone(defChatModelSettings));
+  store.dispatch("setCurChatModelSettings", buildDefaultChatSettings(curChatModel.value));
   await store.dispatch("setCurChatId", "");
   await store.dispatch("resetMessages");
 };
@@ -126,7 +130,7 @@ const onNewChat = async () => {
  */
 const onShowModelSettings = () => {
   if (!curChatModel.value.name) {
-    dsAlert({ type: "warn", message: "请先选择模型" });
+    dsAlert({ type: "warn", message: t("chat.chooseModelFirst") });
     return;
   } else global_chat_model_settings.showModal();
 };
@@ -144,20 +148,22 @@ const onSelectChat = async (item) => {
 /**
  * 删除对话
  */
-const onDeleteChat = async () => {
-  if (isShowOptionCid.value) await deleteChat(isShowOptionCid.value);
-  if (isShowOptionCid.value == cid.value) {
+const onDeleteChat = async (chatId, closeMenu) => {
+  if (closeMenu) closeMenu();
+  if (chatId) await deleteChat(chatId);
+  if (chatId == cid.value) {
     await store.dispatch("setCurChatId", "");
   }
   isShowOptionCid.value = "";
   editChatName.value = "";
-  isShowChatOptions.value = false;
 };
 
 /**
  * 修改对话名称
  */
-const onEditChatName = async () => {
+const onEditChatName = async (chatId, closeMenu) => {
+  if (closeMenu) closeMenu();
+  isShowOptionCid.value = chatId;
   isEditChatName.value = true;
   editChatName.value = "";
   await nextTick();
@@ -174,79 +180,71 @@ const changeChatName = async () => {
   editChatName.value = "";
   isShowOptionCid.value = "";
 };
-
-/**
- * 处理显示点击对话编辑按钮的下拉菜单显示
- */
-const showChatOptions = async (event, cid) => {
-  event.stopPropagation();
-  isShowChatOptions.value = true;
-  // 等待 DOM 更新后计算位置
-  await nextTick();
-  const btnRect = event.currentTarget.getBoundingClientRect();
-
-  const dropdownEl = dropdownRef.value;
-  if (dropdownEl && chatSideContRef.value) {
-    dropdownEl.style.position = "absolute";
-    // 将 dropdown 放置在按钮下方 由于有header的48像素导致这个减去48最合理
-    const containerRect = chatSideContRef.value.getBoundingClientRect();
-    let top = btnRect.bottom - 48;
-    if (top + 88 > containerRect.height) top = containerRect.height - 100;
-    dropdownEl.style.top = `${top}px`;
-    dropdownEl.style.left = `${btnRect.left}px`;
-    dropdownEl.style.zIndex = 301;
-  }
-
-  isShowOptionCid.value = cid;
-};
-
-/**
- * 关闭下拉菜单的显示
- */
-const handleHiddenDropDownClick = () => {
-  isShowChatOptions.value = false;
-};
-
-onMounted(() => {
-  document.addEventListener("click", handleHiddenDropDownClick);
-});
-
-onUnmounted(() => {
-  document.removeEventListener("click", handleHiddenDropDownClick);
-});
 </script>
 
 <style lang="scss" scoped>
 .chat-sidebar-container {
+  --sidebar-rail-width: 64px;
+  --sidebar-panel-width: 272px;
   height: 100%;
   max-height: 100%;
-  background-color: oklch(var(--b2) / 0.2);
+  flex: 0 0 auto;
+  width: var(--sidebar-rail-width);
+  min-width: var(--sidebar-rail-width);
+  max-width: var(--sidebar-rail-width);
+  border: 1px solid oklch(var(--bc) / 0.12);
+  border-radius: 28px;
+  background:
+    linear-gradient(180deg, oklch(var(--b1) / 0.88), oklch(var(--b2) / 0.84)),
+    oklch(var(--b1) / 0.64);
+  box-shadow: 0 20px 44px oklch(var(--bc) / 0.08);
   display: flex;
   flex-direction: row;
+  overflow: hidden;
+  contain: layout paint;
+  will-change: width;
+  transition: width 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+
+  &.expanded {
+    width: calc(var(--sidebar-rail-width) + var(--sidebar-panel-width));
+    min-width: calc(var(--sidebar-rail-width) + var(--sidebar-panel-width));
+    max-width: calc(var(--sidebar-rail-width) + var(--sidebar-panel-width));
+  }
 
   .csdb-sidebar {
     height: 100%;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    padding: 8px;
-    width: 60px;
-    max-width: 60px;
+    padding: 14px 10px;
+    width: 64px;
+    max-width: 64px;
+    background: oklch(var(--b2) / 0.62);
+    transition: border-color 0.18s ease;
 
     .csdb-btn-color1 {
-      background-color: transparent;
-      box-shadow: initial;
-      border-color: transparent;
+      background: oklch(var(--b1) / 0.78);
+      box-shadow: none;
+      border: 1px solid oklch(var(--bc) / 0.12);
+      border-radius: 14px;
+      color: oklch(var(--bc));
+      transition:
+        transform 0.18s ease,
+        border-color 0.18s ease,
+        box-shadow 0.18s ease;
 
       &:hover {
-        background-color: oklch(var(--b1));
+        transform: translateY(-1px);
+        background-color: oklch(var(--b1) / 0.96);
+        border-color: oklch(var(--p) / 0.18);
+        box-shadow: 0 10px 20px oklch(var(--bc) / 0.1);
       }
     }
 
     .csdb-btn-wh1 {
-      height: 32px;
-      width: 32px;
-      min-height: 32px;
+      height: 40px;
+      width: 40px;
+      min-height: 40px;
     }
 
     .csdb-chat-list {
@@ -258,22 +256,46 @@ onUnmounted(() => {
     }
   }
 
+  &.expanded {
+    .csdb-sidebar {
+      border-right: 1px solid oklch(var(--bc) / 0.1);
+    }
+  }
+
   .csdb-chats {
     height: 100%;
     display: flex;
     flex-direction: column;
-    padding: 8px;
-    width: 232px;
-    max-width: 232px;
+    padding: 14px 12px;
+    width: var(--sidebar-panel-width);
+    max-width: var(--sidebar-panel-width);
+    min-width: var(--sidebar-panel-width);
+    overflow: hidden;
+    opacity: 0;
+    transform: translateX(-10px);
+    pointer-events: none;
+    will-change: opacity, transform;
+    transition:
+      opacity 0.16s ease,
+      transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+
+    &.expanded {
+      opacity: 1;
+      transform: translateX(0);
+      pointer-events: auto;
+    }
 
     .csdb-chats-container {
-      background-color: oklch(var(--b2) / 0.1);
+      background: oklch(var(--b1) / 0.42);
       height: 100%;
-      width: 224px;
+      width: 100%;
       text-align: center;
       max-height: 100%;
       overflow-x: hidden;
       overflow-y: auto;
+      border-radius: 22px;
+      padding: 10px;
+      border: 1px solid oklch(var(--bc) / 0.1);
 
       h2 {
         display: flex;
@@ -286,12 +308,15 @@ onUnmounted(() => {
     }
 
     .input {
-      height: 36px;
-      width: 206px;
+      height: 40px;
+      width: 100%;
+      border-radius: 14px;
+      border: 1px solid rgba(113, 130, 84, 0.16);
+      background: rgba(255, 255, 255, 0.88);
 
       &:focus,
       &:focus-within {
-        border-color: unset;
+        border-color: rgba(92, 114, 49, 0.42);
         outline: none;
       }
     }
@@ -305,50 +330,133 @@ onUnmounted(() => {
     }
 
     .csdb-chat-item {
-      height: 36px;
-      min-height: 36px;
-      width: 208px;
-      border: none;
-      border-radius: 10px;
+      height: 44px;
+      min-height: 44px;
+      width: 100%;
+      border: 1px solid transparent;
+      border-radius: 14px;
       background-color: transparent;
       display: flex;
       flex-direction: row;
-      justify-content: space-around;
+      justify-content: space-between;
       align-items: center;
-      color: oklch(var(--bc));
-      margin-bottom: 4px;
+      color: #20301b;
+      margin-bottom: 6px;
+      padding: 0 8px 0 12px;
+      transition:
+        background-color 0.18s ease,
+        border-color 0.18s ease,
+        transform 0.18s ease;
 
       &:hover {
-        background-color: oklch(var(--b2));
+        background-color: oklch(var(--b1) / 0.78);
+        border-color: oklch(var(--bc) / 0.1);
+        transform: translateY(-1px);
       }
     }
 
     .csdb-chat-item-active {
-      background-color: oklch(var(--b3));
-      font-weight: 900;
-      font-size: 16px;
+      background: linear-gradient(180deg, oklch(var(--p) / 0.1), oklch(var(--b1) / 0.9));
+      border-color: oklch(var(--p) / 0.16);
+      box-shadow: 0 10px 18px oklch(var(--bc) / 0.08);
+      font-weight: 700;
     }
 
     .csdb-chat-label {
-      width: 162px;
+      width: 180px;
       text-align: left;
       cursor: pointer;
-      font-size: 14px;
+      font-size: 13px;
+      font-weight: 600;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
 
     .csdb-chat-dropdown {
+      display: inline-flex;
+
       .btn {
-        height: 36px;
-        width: 36px;
+        height: 26px;
+        width: 26px;
         min-height: 0px;
         min-width: 0px;
         background-color: transparent;
         border: none;
         box-shadow: initial;
+        border-radius: 999px;
+        color: oklch(var(--bc) / 0.64);
+        transition:
+          background-color 0.16s ease,
+          color 0.16s ease,
+          transform 0.16s ease,
+          box-shadow 0.16s ease;
+
+        &:hover,
+        &.open {
+          background: oklch(var(--b2) / 0.98);
+          color: oklch(var(--bc));
+          box-shadow: inset 0 0 0 1px oklch(var(--bc) / 0.08);
+        }
+
+        &:hover {
+          transform: translateY(-1px) scale(1.02);
+        }
       }
+    }
+  }
+
+  .csdb-chat-option {
+    width: 100%;
+    min-height: 36px;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 8px 10px;
+    border: none;
+    border-radius: 10px;
+    background: transparent;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 600;
+    color: oklch(var(--bc) / 0.84);
+    line-height: 1;
+    transition:
+      background-color 0.18s ease,
+      color 0.18s ease,
+      transform 0.18s ease;
+
+    &:hover {
+      background: oklch(var(--b2) / 0.9);
+      color: oklch(var(--bc));
+      transform: translateX(1px);
+    }
+  }
+
+  .csdb-chat-option-copy {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    flex: 1 1 auto;
+  }
+
+  .csdb-chat-option-copy span {
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .csdb-chat-option-danger {
+    margin-top: 2px;
+    padding-top: 10px;
+    border-top: 1px solid oklch(var(--bc) / 0.08);
+    color: oklch(var(--er));
+
+    &:hover {
+      background: oklch(var(--er) / 0.09);
+      color: oklch(var(--er));
     }
   }
 }

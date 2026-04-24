@@ -7,7 +7,7 @@
           ref="cciaTextareaRef"
           v-model="inputText"
           class="textarea ccia-custom-textarea"
-          placeholder="请输入对话内容"
+          :placeholder="t('input.chatPlaceholder')"
           @input="debounceInputText"
           @keydown.enter="onEnterKeydown"
         ></textarea>
@@ -17,13 +17,13 @@
         <!-- 丰富对话功能 -->
         <div class="ccia-chat-opts">
           <!-- 上传图片 -->
-          <div class="tooltip tooltip-top" data-tip="上传图片">
+          <AppTooltip :text="t('tooltip.uploadImage')" placement="top">
             <button class="ccia-opts-button" @click="uploadImageFile">
               <div class="ccia-icon" v-html="attach24"></div>
             </button>
-          </div>
+          </AppTooltip>
           <!-- 对话 -->
-          <div v-if="false" class="tooltip tooltip-top" data-tip="网页对话(预览功能)">
+          <div v-if="false" class="tooltip tooltip-top" :data-tip="t('tooltip.sendOrStop')">
             <button class="ccia-opts-button">
               <div class="ccia-icon" v-html="realTimeVoice24"></div>
             </button>
@@ -33,21 +33,21 @@
         <!-- 对话内容的发送或者暂停按钮位置 -->
         <div class="ccia-chat-model-info">
           <select class="select" v-model="selectedModel" @change="onSelectChatModel">
-            <option disabled :value="null">选择对话模型</option>
+            <option disabled :value="null">{{ t("input.selectChatModel") }}</option>
             <option v-for="m in chatModels" :key="m" :value="m">
               {{ m.name }}
             </option>
           </select>
 
           <div class="ccia-chat-button">
-            <div class="tooltip tooltip-top" data-tip="开始/暂停">
+            <AppTooltip :text="t('tooltip.sendOrStop')" placement="top">
               <button class="ccia-send-button" @click="onSendInputData">
                 <!-- send chat button -->
                 <div v-if="!props.isChatting" class="ccia-svg-icon" v-html="arrowUp32"></div>
                 <!-- pause chat button -->
                 <div v-else class="ccia-svg-icon" v-html="pause32"></div>
               </button>
-            </div>
+            </AppTooltip>
           </div>
         </div>
       </div>
@@ -58,10 +58,12 @@
 <script setup>
 import { useStore } from "vuex";
 import { ref, onMounted, onBeforeUnmount, computed, watch } from "vue";
+import { useI18n } from "vue-i18n";
 import { dalle24, realTimeVoice24, attach24, arrowUp32, pause32 } from "@/assets/svg";
 import { addPasteEvent, removePasetEvent, uploadImageFile, isValidUserMsg, dsAlert } from "@/utils";
 import { packUserMsg } from "@/services";
 import { debounce } from "@/utils";
+import AppTooltip from "@/components/AppTooltip.vue";
 
 const props = defineProps({
   isChatting: {
@@ -78,6 +80,7 @@ const cciaTextareaRef = ref(null);
  * 这些都是用于显示模型的标签的数据
  */
 const store = useStore();
+const { t } = useI18n();
 const chatModels = computed(() => store.state.models.chat);
 const curChatModel = computed(() => store.state.curChatModel);
 const selectedModel = ref(null);
@@ -118,7 +121,7 @@ const onSendInputData = async () => {
     // 输入框回退原来大小
     if (cciaTextareaRef.value) cciaTextareaRef.value.style.height = "";
   } else {
-    dsAlert({ type: "error", message: "没有输入有效的问题!" });
+    dsAlert({ type: "error", message: t("toast.invalidQuestion") });
     return;
   }
 };

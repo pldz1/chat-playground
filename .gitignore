@@ -6,6 +6,8 @@
 *.db
 *.pyc
 
+.codex
+/web/dist
 /server/cfg.json
 /server/statics
 /server/.cache
