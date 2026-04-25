@@ -1,7 +1,6 @@
 import store from "@/store";
 import { apiRequest } from "./axios-request.js";
 import { dsAlert, isArrayTypeStr, isValidModelSetting } from "@/utils";
-import { tr } from "@/i18n";
 
 /**
  * 发送登录请求
@@ -44,11 +43,11 @@ export const setChatInsTemplateListAPI = (username, data) => apiRequest("post", 
 export async function login(username, password) {
   const res = await loginAPI(username, password);
   if (!res.flag) {
-    dsAlert({ type: "error", message: tr("toast.loginFailed", { error: res.log }) });
+    dsAlert({ type: "error", message: `Login failed: ${res.log}` });
     return false;
   }
 
-  dsAlert({ type: "success", message: tr("toast.loginSuccess") });
+  dsAlert({ type: "success", message: `Login successfully!` });
   await store.dispatch("login", username);
   return true;
 }
@@ -65,14 +64,14 @@ export async function getModels(updateStore = true) {
   let res = await getModelsAPI(username);
 
   if (!res.flag) {
-    dsAlert({ type: "error", message: tr("toast.userModelsFetchFailed", { error: res.log }) });
+    dsAlert({ type: "error", message: `从数据库获取模型数据失败: ${res.log}` });
     return false;
   }
 
   if (res.data == "") {
     dsAlert({
       type: "warn",
-      message: tr("toast.userModelsMissing"),
+      message: `用户没有模型, 请先在用户管理内添加后使用其他功能.`,
     });
     return false;
   }
@@ -86,14 +85,14 @@ export async function getModels(updateStore = true) {
     } else {
       dsAlert({
         type: "error",
-        message: tr("toast.userModelsInvalid", { error: `${err}: ${res.data}` }),
+        message: `从数据库拿模型解析失败, 不是有效的数据类型: ${err}: ${res.data}`,
       });
       return null;
     }
   } catch (err) {
     dsAlert({
       type: "error",
-      message: tr("toast.userModelsInvalid", { error: `${err}: ${res.data}` }),
+      message: `从数据库拿模型解析失败: ${err}: ${res.data}`,
     });
     return null;
   }
@@ -111,7 +110,7 @@ export async function setModels() {
   const models = store.state.models;
   const res = await setModelsAPI(username, JSON.stringify(models));
   if (!res.flag) {
-    dsAlert({ type: "error", message: tr("toast.userModelsSaveFailed", { error: res.log }) });
+    dsAlert({ type: "error", message: `向数据库设置模型数据失败: ${res.log}` });
     return false;
   }
   return true;
@@ -131,7 +130,7 @@ export async function getChatInsTemplateList() {
   if (!res.flag) {
     dsAlert({
       type: "error",
-      message: tr("toast.userTemplatesFetchFailed", { error: res.log }),
+      message: `从数据库拿用户对话模型的指令模板失败: ${res.log}`,
     });
     return false;
   } else {
@@ -159,7 +158,7 @@ export async function setChatInsTemplateList(data) {
   if (!res.flag) {
     dsAlert({
       type: "error",
-      message: tr("toast.userTemplatesSaveFailed", { error: res.log }),
+      message: `向数据库设置用户的指令列表失败: ${res.log}`,
     });
     return false;
   }

@@ -2,7 +2,6 @@ import "@/typings";
 import store from "@/store";
 
 import { dsAlert, textToHtml } from "@/utils";
-import { tr } from "@/i18n";
 import { renderBlock } from "../markdown/md-render.js";
 import { delete16, app18, copy16 } from "@/assets/svg";
 import { deleteMessage } from "../api/chat-api.js";
@@ -76,7 +75,7 @@ export class ChatElemCreator {
 
     const deleteButtonDiv = document.createElement("div");
     deleteButtonDiv.classList.add("chat-md-bubble-options-button", "tooltip", "tooltip-top");
-    deleteButtonDiv.dataset.tip = tr("tooltip.deleteMessage");
+    deleteButtonDiv.dataset.tip = "删除消息";
     deleteButtonDiv.innerHTML = delete16;
     optionsDiv.appendChild(deleteButtonDiv);
 
@@ -136,7 +135,7 @@ export class ChatElemCreator {
     textDiv.classList.add("markdown-content");
 
     if (thinking) {
-      textDiv.innerHTML = `<div class="markdown-p-text"> ${tr("common.saving")}... </div>`;
+      textDiv.innerHTML = `<div class="markdown-p-text"> 正在请求中... ... </div>`;
     }
 
     const optionsDiv = document.createElement("div");
@@ -144,13 +143,13 @@ export class ChatElemCreator {
 
     const copyMarkdownButtonDiv = document.createElement("div");
     copyMarkdownButtonDiv.classList.add("chat-md-bubble-options-button", "tooltip", "tooltip-top");
-    copyMarkdownButtonDiv.dataset.tip = tr("tooltip.copyText");
+    copyMarkdownButtonDiv.dataset.tip = "复制文本";
     copyMarkdownButtonDiv.innerHTML = copy16;
     optionsDiv.appendChild(copyMarkdownButtonDiv);
     copyMarkdownButtonDiv.addEventListener("click", async () => {
       const index = this.findMsgIndex(mid);
       if (index < 0) {
-        dsAlert({ type: "error", message: tr("toast.invalidMessage") });
+        dsAlert({ type: "error", message: "是一个无效的消息" });
         return;
       }
 
@@ -159,16 +158,16 @@ export class ChatElemCreator {
       navigator.clipboard
         .writeText(message.content[0].text)
         .then(() => {
-          dsAlert({ type: "success", message: tr("toast.messageCopySuccess") });
+          dsAlert({ type: "success", message: "消息成功复制！" });
         })
         .catch((err) => {
-          dsAlert({ type: "error", message: tr("toast.messageCopyFailed", { error: String(err) }) });
+          dsAlert({ type: "error", message: `消息复制到剪切板失败: ${err}` });
         });
     });
 
     const deleteButtonDiv = document.createElement("div");
     deleteButtonDiv.classList.add("chat-md-bubble-options-button", "tooltip", "tooltip-top");
-    deleteButtonDiv.dataset.tip = tr("tooltip.deleteMessage");
+    deleteButtonDiv.dataset.tip = "删除消息";
     deleteButtonDiv.innerHTML = delete16;
     optionsDiv.appendChild(deleteButtonDiv);
     deleteButtonDiv.addEventListener("click", async () => {
@@ -202,7 +201,7 @@ export class ChatElemCreator {
     reasoningEl.appendChild(detailsEl);
 
     const summaryEl = document.createElement("summary");
-    summaryEl.innerHTML = tr("tooltip.reasoning");
+    summaryEl.innerHTML = "思考内容🤔";
     detailsEl.appendChild(summaryEl);
 
     const reasoningTextDiv = document.createElement("div");
@@ -247,7 +246,7 @@ export class ChatElemCreator {
   async deleteMessage(mid) {
     const index = this.findMsgIndex(mid);
 
-    if (index < 0) dsAlert({ type: "error", message: tr("toast.invalidMessage") });
+    if (index < 0) dsAlert({ type: "error", message: "是一个无效的消息" });
     else await store.dispatch("spliceMessages", index);
   }
 }

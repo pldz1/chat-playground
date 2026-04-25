@@ -1,7 +1,6 @@
 import store from "@/store/index.js";
 
 import { dsAlert, getUuid } from "@/utils";
-import { tr } from "@/i18n";
 import { renderBlock } from "../markdown/md-render.js";
 import { AIGCClient } from "../aigc/aigc-cient.js";
 import { ChatElemCreator } from "./creator.js";
@@ -251,7 +250,7 @@ export class ChatDrawer extends ChatElemCreator {
   addUserQHTMLElem(content, mid) {
     const res = this.createUserQHTMLElem(content, mid);
     if (!res) {
-      dsAlert({ type: "warn", message: tr("toast.drawUserQuestionFailed") });
+      dsAlert({ type: "warn", message: "绘制用户问题失败！" });
     }
   }
 
@@ -264,7 +263,7 @@ export class ChatDrawer extends ChatElemCreator {
   addAssHTMLElem(content, reasoning_content, mid) {
     const res = this.createAssHTMLElem(content, reasoning_content, mid);
     if (!res) {
-      dsAlert({ type: "warn", message: tr("toast.drawAssistantFailed") });
+      dsAlert({ type: "warn", message: "绘制机器人助理回答消息失败！" });
     }
   }
 

@@ -8,10 +8,10 @@
     <div class="gifp-container">
       <div class="gifp-content">
         <div class="gifp-settings">
-          <h4>{{ t("image.settingsTitle") }}</h4>
+          <h4>模型设置</h4>
           <!-- 图像生成的模型 -->
           <div class="gifp-setting-item">
-            <span>{{ t("image.model") }}</span>
+            <span>模型: </span>
             <select class="select select-bordered w-full max-w-xs" v-model="imageModelSettings.model">
               <option v-for="imm in imageModels" :value="imm" :key="imm">
                 {{ imm.name }}
@@ -20,7 +20,7 @@
           </div>
           <!-- 单词生成数量 -->
           <div class="gifp-setting-item">
-            <span>{{ t("image.count") }}</span>
+            <span>数量: </span>
             <select class="select select-bordered w-full max-w-xs" v-model="imageModelSettings.n">
               <option :value="1">1</option>
               <option :value="2">2</option>
@@ -30,7 +30,7 @@
           <div>
             <!-- 生成图像的尺寸 -->
             <div class="gifp-setting-item">
-              <span class="gifp-setting-label">{{ t("image.size") }}</span>
+              <span class="gifp-setting-label">尺寸: </span>
               <select class="select select-bordered w-full max-w-xs" v-model="imageModelSettings.size">
                 <option v-for="imsz in imageModelSize" :key="imsz.value" :value="imsz.value">
                   {{ imsz.name }}
@@ -58,9 +58,9 @@
           <!-- 图像的简单操作 -->
           <div class="gifp-image-nav" :class="{ disabled: selectedImageId == null }">
             <div class="join">
-              <button class="join-item btn btn-outline" @click="deleteImg">{{ t("image.deleteImage") }}</button>
-              <button class="join-item btn btn-outline" @click="saveTo">{{ t("image.saveLocal") }}</button>
-              <button class="join-item btn btn-outline" @click="copyToCli">{{ t("image.copyClipboard") }}</button>
+              <button class="join-item btn btn-outline" @click="deleteImg">删除图像</button>
+              <button class="join-item btn btn-outline" @click="saveTo">保存到本地</button>
+              <button class="join-item btn btn-outline" @click="copyToCli">复制到剪切板</button>
             </div>
           </div>
           <!-- 输入图像的提示 -->
@@ -79,7 +79,6 @@
 <script setup>
 import { useStore } from "vuex";
 import { computed, nextTick, ref, watch } from "vue";
-import { useI18n } from "vue-i18n";
 import { arrowUp32 } from "@/assets/svg";
 import { AIGCClient, getImageList, pushImage, deleteImage } from "@/services";
 import { imageModelSize, defImageModelSeting } from "@/constants";
@@ -87,7 +86,6 @@ import { dsAlert, copyToClipboard, saveToLocal } from "@/utils";
 import HeaderBar from "@/components/HeaderBar.vue";
 
 const store = useStore();
-const { t } = useI18n();
 const isLoggedIn = computed(() => store.state.isLoggedIn);
 const imageModels = computed(() => store.state.models.image);
 const imageList = computed(() => store.state.imageList);
@@ -146,7 +144,7 @@ const onSendImg = async () => {
     isGenerating.value = false;
     dsAlert({
       type: "error",
-      message: t("image.initError", { error: String(err) }),
+      message: `模型初始化失败: ${String(err)}`,
       container: dsAlertContainer.value,
     });
   }
@@ -174,13 +172,13 @@ const copyToCli = async () => {
   if (flag)
     dsAlert({
       type: "info",
-      message: t("image.copied"),
+      message: "图像已成功复制到剪切板",
       container: dsAlertContainer.value,
     });
   else
     dsAlert({
       type: "error",
-      message: t("image.copyFailed"),
+      message: "复制图像到剪切板失败",
       container: dsAlertContainer.value,
     });
 };
@@ -207,13 +205,13 @@ const saveTo = async () => {
   if (flag)
     dsAlert({
       type: "info",
-      message: t("image.savedLocal"),
+      message: "图像已成功保存到本地",
       container: dsAlertContainer.value,
     });
   else
     dsAlert({
       type: "error",
-      message: t("image.saveFailed"),
+      message: "保存失败",
       container: dsAlertContainer.value,
     });
 };
@@ -233,7 +231,7 @@ watch(
   () => isLoggedIn.value,
   async (newVal) => {
     if (!newVal) {
-      dsAlert({ type: "warn", message: t("common.loginHint") });
+      dsAlert({ type: "warn", message: "未登录, 登录获得更好体验🤣." });
       return;
     }
 
@@ -246,18 +244,15 @@ watch(
 
 <style lang="scss" scoped>
 .image-homepage-container {
+  position: relative;
+  left: 0px;
+  top: 0px;
   height: 100%;
   width: 100%;
-  display: flex;
-  flex-direction: column;
-  background:
-    radial-gradient(circle at top right, oklch(var(--a) / 0.1), transparent 30%),
-    radial-gradient(circle at bottom left, oklch(var(--p) / 0.06), transparent 24%),
-    linear-gradient(180deg, oklch(var(--b1) / 0.98), oklch(var(--b2) / 0.96));
 
   .ihpc-header {
-    height: 64px;
-    flex: 0 0 auto;
+    position: relative;
+    height: 48px;
   }
 
   .disabled {
@@ -266,77 +261,50 @@ watch(
   }
 
   .gifp-container {
-    flex: 1 1 auto;
-    min-height: 0;
-    width: 100%;
-    padding: 14px;
+    height: calc(100% - 48px);
+    width: calc(100% - 16px);
+    padding: 8px;
+    background-color: oklch(var(--b1));
 
     .gifp-content {
       height: 100%;
       width: 100%;
       display: flex;
       flex-direction: row;
-      gap: 14px;
 
       .gifp-settings {
-        width: 320px;
+        width: 282px;
         display: flex;
         flex-direction: column;
         gap: 16px;
-        padding: 22px;
-        border-radius: 28px;
-        border: 1px solid oklch(var(--bc) / 0.12);
-        background:
-          linear-gradient(180deg, oklch(var(--b1) / 0.9), oklch(var(--b2) / 0.84)),
-          oklch(var(--b1) / 0.7);
-        box-shadow: 0 20px 46px oklch(var(--bc) / 0.08);
+        padding: 8px;
+        border-radius: 16px;
+        background-color: oklch(var(--b2));
 
         h4 {
-          margin: 0;
-          font-size: 24px;
-          font-weight: 800;
-          color: oklch(var(--bc));
+          font-weight: 600;
         }
 
         .gifp-setting-item {
           display: flex;
-          flex-direction: column;
-          align-items: flex-start;
+          flex-direction: row;
+          align-items: center;
           justify-content: flex-start;
           width: 100%;
-          gap: 10px;
+          height: 48px;
+          gap: 16px;
 
           span {
-            font-size: 12px;
-            font-weight: 700;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            color: oklch(var(--bc) / 0.66);
-          }
-
-          :deep(.select) {
-            width: 100%;
-            max-width: 100%;
-            height: 52px;
-            min-height: 52px;
-            border-radius: 16px;
-            border: 1px solid oklch(var(--bc) / 0.12);
-            background: oklch(var(--b1) / 0.86);
+            width: 50px;
           }
         }
       }
 
       .gifp-img-container {
         height: 100%;
-        width: calc(100% - 334px);
-        min-width: 0;
-        padding: 24px;
-        border: 1px solid oklch(var(--bc) / 0.12);
-        border-radius: 30px;
-        background:
-          radial-gradient(circle at top right, oklch(var(--a) / 0.08), transparent 28%),
-          linear-gradient(180deg, oklch(var(--b1) / 0.9), oklch(var(--b2) / 0.84));
-        box-shadow: 0 22px 52px oklch(var(--bc) / 0.08);
+        width: calc(100% - 326px);
+        min-width: 406px;
+        padding: 16px;
 
         .gifp-image-card::-webkit-scrollbar {
           height: 8px;
@@ -344,41 +312,34 @@ watch(
         }
 
         .gifp-image-card {
-          height: calc(100% - 164px);
+          height: calc(100% - 142px);
           width: 100%;
           max-width: 100%;
-          padding: 6px 0 12px;
+          padding: 8px;
           display: flex;
           flex-direction: row;
-          align-items: flex-start;
-          gap: 18px;
+          align-items: center;
+          gap: 16px;
           overflow-x: auto;
           user-select: none;
 
           .global-skeleton-active {
-            box-shadow: 0 0 0 4px oklch(var(--p) / 0.2);
+            box-shadow: oklch(var(--p)) 0px 0px 0px 4px;
           }
 
           .image-item {
-            min-height: 398px;
-            width: 356px;
-            min-width: 356px;
+            height: 386px;
+            width: 386px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: flex-start;
-            gap: 12px;
-            padding: 16px;
-            border-radius: 24px;
-            border: 1px solid oklch(var(--bc) / 0.12);
-            background: oklch(var(--b1) / 0.72);
+            gap: 8px;
 
             .skeleton {
               height: 324px;
               width: 324px;
-              padding: 10px;
-              border-radius: 22px;
-              background: oklch(var(--b2) / 0.9);
+              padding: 8px;
 
               img {
                 min-height: 302px;
@@ -389,17 +350,14 @@ watch(
             }
 
             .image-prompt {
-              min-height: 66px;
-              max-width: 320px;
+              height: 72px;
+              max-width: 348px;
               display: -webkit-box;
               -webkit-line-clamp: 3;
               -webkit-box-orient: vertical;
               overflow: hidden;
               text-overflow: ellipsis;
               user-select: all;
-              font-size: 13px;
-              line-height: 1.6;
-              color: oklch(var(--bc) / 0.72);
             }
           }
         }
@@ -408,34 +366,30 @@ watch(
           display: flex;
           flex-direction: row;
           align-items: center;
-          justify-content: flex-start;
+          justify-content: center;
           height: 64px;
-          padding: 6px 0;
+          padding: 8px;
           gap: 16px;
           width: 100%;
 
           .btn {
-            min-width: 126px;
-            border-radius: 14px;
+            width: 126px;
           }
         }
 
         .gifp-image-input {
           display: flex;
           flex-direction: row;
-          height: 100px;
+          height: 92px;
           align-items: center;
           justify-content: center;
-          padding: 8px 0 0;
+          padding: 8px;
           gap: 16px;
 
           textarea {
-            height: 84px !important;
-            width: calc(100% - 80px);
+            height: 76px !important;
+            width: 800px;
             resize: none;
-            border-radius: 18px;
-            border: 1px solid oklch(var(--bc) / 0.12);
-            background: oklch(var(--b1) / 0.84);
           }
         }
       }

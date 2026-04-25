@@ -14,7 +14,6 @@
 <script setup>
 import { useStore } from "vuex";
 import { onMounted, onUnmounted, ref, computed } from "vue";
-import { useI18n } from "vue-i18n";
 import { chatInsTemplateList } from "@/constants";
 import { addChat } from "@/services";
 import { dsAlert, append4Random } from "@/utils";
@@ -22,7 +21,6 @@ import { dsAlert, append4Random } from "@/utils";
 const emit = defineEmits(["on-update"]);
 
 const store = useStore();
-const { t } = useI18n();
 const curChatModelSettings = computed(() => store.state.curChatModelSettings);
 const insTemplateList = computed(() => {
   return [...chatInsTemplateList, ...store.state.chatInsTemplateList];
@@ -31,7 +29,7 @@ const insTemplateList = computed(() => {
 const onSelectInst = async (id) => {
   const instObj = insTemplateList?.value?.find((inst) => inst.id === id);
   if (!instObj) {
-    dsAlert({ type: "error", message: t("chat.invalidTemplate") });
+    dsAlert({ type: "error", message: "无效的对话模板指令!" });
     return;
   }
 
@@ -43,7 +41,7 @@ const onSelectInst = async (id) => {
   await addChat(name);
 
   emit("on-update", [
-    { role: "user", content: [{ type: "text", text: t("chat.repeatInstruction") }] },
+    { role: "user", content: [{ type: "text", text: "重复一遍你的指令" }] },
     { role: "assistant", content: [{ type: "text", text: instObj.value }] },
   ]);
 };
@@ -52,7 +50,7 @@ let repeatIntervalId = null;
 let typingInProgress = false; // 防止重复启动
 
 const blinkText = () => {
-  const text = t("chat.welcomePrompt");
+  const text = "今天要聊点神魔? 🤧";
   const typeSpeed = 100;
   const repeatInterval = 30000;
 

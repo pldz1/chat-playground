@@ -94,30 +94,23 @@ onMounted(() => {
 <style lang="scss" scoped>
 .chat-card-container {
   position: relative;
+  left: 0px;
+  right: 0px;
   width: 100%;
   height: 100%;
-  border: 1px solid oklch(var(--bc) / 0.12);
-  border-radius: 30px;
-  background:
-    radial-gradient(circle at top right, oklch(var(--a) / 0.08), transparent 26%),
-    radial-gradient(circle at bottom left, oklch(var(--p) / 0.05), transparent 24%),
-    linear-gradient(180deg, oklch(var(--b1) / 0.9), oklch(var(--b2) / 0.86));
-  box-shadow: 0 22px 52px oklch(var(--bc) / 0.08);
-  overflow: hidden;
+  padding: 8px;
 
   .ccdc-messages-container,
   .chat-template-display-card,
   .cccd-input-area {
     position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    width: min(880px, calc(100% - 72px));
-    max-width: min(880px, calc(100% - 72px));
+    left: 16%;
+    width: 68%;
+    max-width: 68%;
   }
 
   .ccdc-messages-container {
-    top: 20px;
-    height: calc(100% - 156px);
+    height: calc(100% - 128px);
     z-index: 100;
   }
 
@@ -127,11 +120,10 @@ onMounted(() => {
     max-height: 100%;
     overflow-x: hidden;
     overflow-y: auto;
-    padding-right: 6px;
   }
 
   .cccd-input-area {
-    bottom: 18px;
+    bottom: 10px;
     z-index: 201;
     display: flex;
     justify-content: center;

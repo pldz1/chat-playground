@@ -19,15 +19,10 @@ export default {
   width: 100vw;
   height: 100vh;
   min-height: 400px;
-  font-family:
-    "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Noto Sans SC",
-    "Microsoft YaHei", sans-serif;
+  font-family: "Microsoft YaHei";
   overflow: hidden;
-  background:
-    radial-gradient(circle at top left, oklch(var(--p) / 0.14), transparent 34%),
-    radial-gradient(circle at top right, oklch(var(--a) / 0.12), transparent 28%),
-    linear-gradient(180deg, oklch(var(--b1) / 0.98), oklch(var(--b2) / 0.96));
-  color: oklch(var(--bc));
+  background-color: inherit;
+  border-radius: 8px;
   /* 允许在webview中拷贝文字 */
   user-select: text;
 }

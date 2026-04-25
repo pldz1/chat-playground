@@ -85,40 +85,27 @@ export function isValidChatInfoArray(data) {
 /**
  * 判断 json 的数据, 是不是有效的模型设置
  */
-export const getModelSettingValidationError = (data) => {
+export const isValidModelSetting = (data) => {
   const expectedKeys = ["chat", "image", "rtaudio"];
   const expectedFields = Object.keys(defModelType);
 
-  if (typeof data !== "object" || data === null) {
-    return "顶层不是有效对象";
-  }
+  if (typeof data !== "object" || data === null) return false;
 
   // 所有指定 key 都必须存在且是数组
   for (const key of expectedKeys) {
-    if (!(key in data)) {
-      return `缺少顶层字段: ${key}`;
-    }
-    if (!Array.isArray(data[key])) {
-      return `字段 ${key} 不是数组`;
-    }
+    if (!Array.isArray(data[key])) return false;
   }
 
   // 只要数组不为空，每一项都必须包含所有 expectedFields
+  const validateArrayItems = (arr) => {
+    return arr.every((item) => expectedFields.every((field) => field in item));
+  };
+
   for (const key of expectedKeys) {
-    for (let index = 0; index < data[key].length; index++) {
-      const item = data[key][index];
-      if (!item || typeof item !== "object") {
-        return `${key}[${index}] 不是对象`;
-      }
-      for (const field of expectedFields) {
-        if (!(field in item)) {
-          return `${key}[${index}] 缺少字段: ${field}`;
-        }
-      }
+    if (data[key].length > 0 && !validateArrayItems(data[key])) {
+      return false;
     }
   }
 
-  return "";
+  return true;
 };
-
-export const isValidModelSetting = (data) => !getModelSettingValidationError(data);
