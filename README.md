@@ -1,3 +1,13 @@
+# ⚠️ 废弃项目
+
+这个项目被废弃了.
+
+👉 新的项目: [ai-api-hub](https://github.com/pldz1/ai-api-hub.git)
+
+原因:
+- 新项目支持更多API接口测试
+- 新项目比旧项目复杂, 保留这个旧项目的简单的特点
+
 # 🎨 Chat Playground v1
 
 **Chat Playground v1**，希望用这个项目工具，体验各种好玩的 AI 功能，像与 AI 对话、AI 图像等等！
